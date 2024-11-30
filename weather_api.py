@@ -23,9 +23,12 @@ DIRECTION_TRANSFORM = {
 }
 
 
-def current_weather(lat, lon):
+def current_weather(lat: float, lon: float) -> dict:
     """
-    Описание функции, входных и выходных переменных
+    Function that return the weather for latitude and longitude
+    :param lat: latitude
+    :param lon: longitude
+    :return: data as a dict
     """
     token = 'a58f910e-ef9e-43f1-aa15-0f9bc1bde3f1'  # Вставить ваш токен
     url = f"https://api.weather.yandex.ru/v2/forecast?lat={lat}&lon={lon}"  # Если вдруг используете тариф «Погода на вашем сайте»
