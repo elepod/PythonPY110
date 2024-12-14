@@ -1,3 +1,5 @@
+import json
+
 import requests
 from datetime import datetime
 
@@ -51,6 +53,22 @@ def current_weather(lat: float, lon: float) -> dict:
     }
     return result
 
+def current_weather_api_weather(city):
+    token = 'd45ec687f6674449bbf153647243011'
+    params = {'key': token, 'q': city}
+    url = f'https://api.weatherapi.com/v1/current.json'
+    response = requests.get(url, params=params)
+    data = response.json()
+    result = {
+        'city': data["location"]["name"],
+        'country': data["location"]["country"],
+        'time': data['current']['last_updated'],
+        'temp': data["current"]["temp_c"],
+        'feels_like_temp': data["current"]["feelslike_c"],
+    }
+    return result
+
 
 if __name__ == "__main__":
-    print(current_weather(59.93, 30.31))  # Проверка работы для координат Санкт-Петербурга
+    # print(current_weather(59.93, 30.31))  # Проверка работы для координат Санкт-Петербурга
+    print(current_weather_api_weather('London'))
