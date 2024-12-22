@@ -1,3 +1,6 @@
+from itertools import product
+from lib2to3.fixes.fix_input import context
+
 from django.shortcuts import render
 
 # Create your views here.
@@ -35,7 +38,11 @@ def products_view(request):
                                      category_key=category_key)  # TODO Использовать filtering_category и провести фильтрацию с параметрами category
         # В этот раз добавляем параметр safe=False, для корректного отображения списка в JSON
         return JsonResponse(data, safe=False, json_dumps_params={'ensure_ascii': False,
-                                                                 'indent': 4})
+                                                                 'indent': 4},
+                            context={
+                                'product': data,
+                                'category': category_key
+                            })
 
 
 
@@ -47,25 +54,39 @@ def products_view(request):
 
 from django.shortcuts import render
 
+# def shop_view(request):
+#     if request.method == "GET":
+#         return render(request, 'store/shop.html', context={"products": DATABASE.values()})
+
 def shop_view(request):
     if request.method == "GET":
-        return render(request, 'store/shop.html', context={"products": DATABASE.values()})
+        # Обработка фильтрации из параметров запроса
+        category_key = request.GET.get("category")
+        if ordering_key := request.GET.get("ordering"):
+            if request.GET.get("reverse") in ('true', 'True'):
+                data = filtering_category(DATABASE, category_key, ordering_key,
+                                          True)
+            else:
+                data = filtering_category(DATABASE, category_key, ordering_key)
+        else:
+            data = filtering_category(DATABASE, category_key)
+        return render(request, 'store/shop.html',
+                      context={"products": data})
 
 
 def products_page_view(request, page):
     if request.method == "GET":
         if isinstance(page, str):
             for data in DATABASE.values():
-                if data['html'] == page:  # Если значение переданного параметра совпадает именем html файла
-                    with open(f'store/products/{page}.html', encoding="utf-8") as f:
-                        res = f.read()
-                    return HttpResponse(res)
+                if data['html'] == page:
+                    return render(request, "store/product.html", context={"product": data})
+
         elif isinstance(page, int):
+            # Обрабатываем условие того, что пытаемся получить страницу товара по его id
             data = DATABASE.get(str(page))  # Получаем какой странице соответствует данный id
             if data:
-                with open(f'store/products/{data["html"]}.html', encoding="utf-8") as f:
-                    res = f.read()
-                return HttpResponse(res)
+                return render(request, "store/product.html", context={"product": data})
+
         return HttpResponse(status=404)
 
 
