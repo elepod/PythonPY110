@@ -63,8 +63,6 @@ def view_in_cart(request) -> dict:  # Уже реализовано, не нуж
         with open('cart.json', encoding='utf-8') as f:
             return json.load(f)
 
-    cart = {'products': {}}  # было
-
     # from django.contrib.auth import get_user
     user = get_user(request).username  # Получаем авторизированного пользователя
     cart = {user: {'products': {}}}  # стало
@@ -138,6 +136,83 @@ def add_user_to_cart(request, username: str) -> None:
         with open('cart.json', mode='w', encoding='utf-8') as f:
             cart_users[username] = {'products': {}}
             json.dump(cart_users, f)
+
+
+def view_in_wishlist(request) -> dict:
+    """
+    Просматривает содержимое wishlist.json
+
+    :return: Содержимое 'wishlist.json'
+    """
+    if os.path.exists('wishlist.json'):  # Если файл существует
+        with open('wishlist.json', encoding='utf-8') as f:
+            return json.load(f)
+
+    # from django.contrib.auth import get_user
+    user = get_user(request).username  # Получаем авторизированного пользователя
+    wishlist = {user: {'products': []}}
+    with open('wishlist.json', mode='x', encoding='utf-8') as f:  # Создаём файл и записываем туда пустую корзину
+        json.dump(wishlist, f)
+
+    return wishlist
+
+def add_user_to_wishlist(request, username: str) -> None:
+    """
+    Добавляет пользователя в базу данных wishlist, если его там не было.
+
+    :param username: Имя пользователя
+    :return: None
+    """
+    wishlist_users = view_in_wishlist(request)
+
+    wishlist_user = wishlist_users.get(username)
+
+    if not wishlist_user:  # Если пользователя до настоящего момента не было в корзине, то создаём его и записываем в базу
+        with open('wishlist.json', mode='w', encoding='utf-8') as f:
+            wishlist_users[username] = {'products': []}
+            json.dump(wishlist_users, f)
+
+def add_to_wishlist(request, id_product: str) -> bool:
+    """
+    Добавляет продукт в wishlist,если в wishlist нет данного продукта.
+
+    :param id_product: Идентификационный номер продукта в виде строки.
+    :return: Возвращает True в случае успешного добавления, а False в случае неуспешного добавления(товара по id_product
+    не существует).
+    """
+    wishlist_users = view_in_wishlist(request)
+    wishlist_user = wishlist_users[get_user(request).username]
+
+    if DATABASE.get(id_product):
+        if id_product not in wishlist_user["products"]:
+            wishlist_user["products"].append(id_product)
+    else:
+        return False
+    with open('wishlist.json', 'w', encoding='utf-8') as f:
+        json.dump(wishlist_users, f)  # стало
+    return True
+
+
+def remove_from_wishlist(request, id_product: str) -> bool:
+    """
+    Удаляет позицию продукта из wishlist.
+
+    :param id_product: Идентификационный номер продукта в виде строки.
+    :return: Возвращает True в случае успешного удаления, а False в случае неуспешного удаления(товара по id_product
+    не существует).
+    """
+    wishlist_users = view_in_wishlist(request)
+    wishlist_user= get_user(request).username
+
+    if id_product in wishlist_users[wishlist_user]["products"]:
+        wishlist_users[wishlist_user]["products"].remove(str(id_product))
+    else:
+        return False
+    with open('wishlist.json', 'w+', encoding='utf-8') as f:
+        print(wishlist_users)
+        json.dump(wishlist_users, f)  # стало
+    return True
+
 
 
 
