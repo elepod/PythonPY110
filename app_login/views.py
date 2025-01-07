@@ -29,4 +29,4 @@ def login_view(request):
 def logout_view(request):
     if request.method == "GET":
         logout(request)  # Функция разлогинивает пользователя
-        return render(request, "store/shop.html") # TODO Верните редирект на главную страницу
+        return redirect("/") # TODO Верните редирект на главную страницу
